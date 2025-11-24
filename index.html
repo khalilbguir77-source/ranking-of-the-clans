@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Live Ranking Editable</title>
+<style>
+body{
+  margin:0;
+  background:transparent;
+  font-family: Arial, sans-serif;
+}
+.container{
+  width:100%;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.player{
+  padding:14px;
+  border-radius:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:bold;
+  font-size:16px;
+  transition:0.3s;
+}
+.top1{background:linear-gradient(45deg,#FFD700,#FFB700);color:black;}
+.top2{background:linear-gradient(45deg,#C0C0C0,#A0A0A0);color:black;}
+.top3{background:linear-gradient(45deg,#CD7F32,#B87333);color:black;}
+.top4{background:linear-gradient(45deg,#7F00FF,#A020F0);color:white;}
+.top5{background:linear-gradient(45deg,#0066FF,#00BFFF);color:white;}
+.normal{background:#222;color:white;}
+
+button{
+  background:black;
+  color:white;
+  border:none;
+  padding:6px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  margin-left:5px;
+}
+input{
+  width:60px;
+  padding:2px 4px;
+  font-size:14px;
+  border-radius:5px;
+  border:none;
+  margin-left:5px;
+}
+.editable{
+  display:flex;
+  align-items:center;
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="board"></div>
+
+<script>
+let players = [
+  { name: "Player 1", points: 120 },
+  { name: "Player 2", points: 95 },
+  { name: "Player 3", points: 80 },
+  { name: "Player 4", points: 65 },
+  { name: "Player 5", points: 50 },
+  { name: "Player 6", points: 30 }
+];
+
+function getClass(i){
+  if(i==0) return "player top1";
+  if(i==1) return "player top2";
+  if(i==2) return "player top3";
+  if(i==3) return "player top4";
+  if(i==4) return "player top5";
+  return "player normal";
+}
+
+function renderBoard(){
+  const board = document.getElementById("board");
+
+  let sorted = [...players].sort((a,b)=>b.points - a.points);
+
+  board.innerHTML = "";
+
+  sorted.forEach((p,i)=>{
+    const div = document.createElement("div");
+    div.className = getClass(i);
+
+    div.innerHTML = `
+      <div class="editable">
+        <span>TOP ${i+1} - </span>
+        <input type="text" value="${p.name}" oninput="updateName('${p.name}', this.value)">
+        <span> </span>
+        <input type="number" value="${p.points}" oninput="updatePoints('${p.name}', this.value)">
+        <button onclick="addPoint('${p.name}')">+10</button>
+      </div>
+    `;
+    board.appendChild(div);
+  });
+}
+
+function addPoint(name){
+  const p = players.find(pl=>pl.name===name);
+  if(p){
+    p.points += 10;
+    renderBoard();
+  }
+}
+
+function updateName(oldName, newName){
+  const p = players.find(pl=>pl.name===oldName);
+  if(p){
+    p.name = newName;
+    renderBoard();
+  }
+}
+
+function updatePoints(name, newPoints){
+  const p = players.find(pl=>pl.name===name);
+  if(p){
+    p.points = parseInt(newPoints) || 0;
+    renderBoard();
+  }
+}
+
+// تحديث تلقائي كل 20 ثانية (20000 مللي ثانية)
+setInterval(renderBoard, 20000);
+renderBoard();
+
+</script>
+</body>
+</html>
