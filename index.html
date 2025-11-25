@@ -1,136 +1,103 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Live Ranking Editable</title>
+<title>Live Ranking</title>
+
 <style>
-body{
-  margin:0;
-  background:transparent;
+body {
+  margin: 0;
+  background: transparent;
   font-family: Arial, sans-serif;
 }
-.container{
-  width:100%;
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.player{
-  padding:14px;
-  border-radius:16px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-weight:bold;
-  font-size:16px;
-  transition:0.3s;
-}
-.top1{background:linear-gradient(45deg,#FFD700,#FFB700);color:black;}
-.top2{background:linear-gradient(45deg,#C0C0C0,#A0A0A0);color:black;}
-.top3{background:linear-gradient(45deg,#CD7F32,#B87333);color:black;}
-.top4{background:linear-gradient(45deg,#7F00FF,#A020F0);color:white;}
-.top5{background:linear-gradient(45deg,#0066FF,#00BFFF);color:white;}
-.normal{background:#222;color:white;}
 
-button{
-  background:black;
-  color:white;
-  border:none;
-  padding:6px 10px;
-  border-radius:10px;
-  cursor:pointer;
-  margin-left:5px;
+#board {
+  width: 260px; /* جعلناه أقل عرضًا */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 5px;
 }
-input{
-  width:60px;
-  padding:2px 4px;
-  font-size:14px;
-  border-radius:5px;
-  border:none;
-  margin-left:5px;
+
+.player {
+  padding: 10px 12px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  background: #111;
+  color: white;
 }
-.editable{
-  display:flex;
-  align-items:center;
+
+/* الأوائل */
+.top1 { background: linear-gradient(45deg, #FFD700, #FFB700); color: black; }
+.top2 { background: linear-gradient(45deg, #C0C0C0, #A9A9A9); color: black; }
+.top3 { background: linear-gradient(45deg, #CD7F32, #B87333); color: black; }
+.normal { background:#111; color:white; }
+
+.name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.points {
+  margin-left: 10px;
 }
 </style>
 </head>
+
 <body>
 
-<div class="container" id="board"></div>
+<div id="board"></div>
 
 <script>
-let players = [
-  { name: "khalil", points: 120 },
-  { name: "test", points: 95 },
-  { name: "akayaka", points: 80 },
-  { name: "Player 4", points: 65 },
-  { name: "Player 5", points: 50 },
-  { name: "Player 6", points: 30 }
-];
 
-function getClass(i){
-  if(i==0) return "player top1";
-  if(i==1) return "player top2";
-  if(i==2) return "player top3";
-  if(i==3) return "player top4";
-  if(i==4) return "player top5";
-  return "player normal";
-}
+/* ضع هنا رابط JSON من simple.ink (Notion) */
+const DATA_URL = "ضع_هنا_الرابط";
 
-function renderBoard(){
-  const board = document.getElementById("board");
+async function loadPlayers(){
+  try {
+    const res = await fetch(DATA_URL);
+    const data = await res.json();
 
-  let sorted = [...players].sort((a,b)=>b.points - a.points);
+    const players = data.map(p => ({
+      name: p.Name,
+      points: parseInt(p.Points)
+    })).sort((a,b)=> b.points - a.points);
 
-  board.innerHTML = "";
+    const board = document.getElementById("board");
+    board.innerHTML = "";
 
-  sorted.forEach((p,i)=>{
-    const div = document.createElement("div");
-    div.className = getClass(i);
+    players.forEach((p, i) => {
+      const div = document.createElement("div");
 
-    div.innerHTML = `
-      <div class="editable">
-        <span>TOP ${i+1} - </span>
-        <input type="text" value="${p.name}" oninput="updateName('${p.name}', this.value)">
-        <span> </span>
-        <input type="number" value="${p.points}" oninput="updatePoints('${p.name}', this.value)">
-        <button onclick="addPoint('${p.name}')">+10</button>
-      </div>
-    `;
-    board.appendChild(div);
-  });
-}
+      if(i === 0) div.className = "player top1";
+      else if(i === 1) div.className = "player top2";
+      else if(i === 2) div.className = "player top3";
+      else div.className = "player normal";
 
-function addPoint(name){
-  const p = players.find(pl=>pl.name===name);
-  if(p){
-    p.points += 10;
-    renderBoard();
+      div.innerHTML = `
+        <span class="name">TOP ${i+1} - ${p.name}</span>
+        <span class="points">${p.points}</span>
+      `;
+
+      board.appendChild(div);
+    });
+
+  } catch(e){
+    console.log("Error loading data", e);
   }
 }
 
-function updateName(oldName, newName){
-  const p = players.find(pl=>pl.name===oldName);
-  if(p){
-    p.name = newName;
-    renderBoard();
-  }
-}
-
-function updatePoints(name, newPoints){
-  const p = players.find(pl=>pl.name===name);
-  if(p){
-    p.points = parseInt(newPoints) || 0;
-    renderBoard();
-  }
-}
-
-// تحديث تلقائي كل 20 ثانية (20000 مللي ثانية)
-setInterval(renderBoard, 20000);
-renderBoard();
+/* يحدث كل 5 ثواني تلقائياً */
+setInterval(loadPlayers, 5000);
+loadPlayers();
 
 </script>
+
 </body>
 </html>
